@@ -544,7 +544,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     /* ── Chart: render ───────────────────────────────── */
-    function renderDailyChart(points, metric) {
+    function renderChart(points, metric, isRealtime) {
         if (!chart || !chartGrid || !chartArea || !chartLine || !chartPoints || !chartEmpty || !chartWrapper) return;
 
         var meta = metricMeta[metric] || metricMeta.power;
@@ -571,11 +571,16 @@ document.addEventListener('DOMContentLoaded', function () {
         chartLine.style.filter  = 'drop-shadow(0 0 7px ' + meta.glow + ')';
         chartArea.style.fill    = meta.area;
 
-        // Average badge
-        var sum = values.reduce(function (acc, p) { return acc + p.value; }, 0);
-        var avg = sum / values.length;
+        // Average or Current value badge
         var unit = meta.unit ? ' ' + meta.unit : '';
-        if (chartAvgBadge) chartAvgBadge.textContent = 'Rata-rata: ' + meta.fmt.format(avg) + unit;
+        if (isRealtime) {
+            var latestVal = values[values.length - 1].value;
+            if (chartAvgBadge) chartAvgBadge.textContent = 'Saat Ini: ' + meta.fmt.format(latestVal) + unit;
+        } else {
+            var sum = values.reduce(function (acc, p) { return acc + p.value; }, 0);
+            var avg = sum / values.length;
+            if (chartAvgBadge) chartAvgBadge.textContent = 'Rata-rata: ' + meta.fmt.format(avg) + unit;
+        }
 
         var width     = 640;
         var height    = 210;
@@ -601,9 +606,9 @@ document.addEventListener('DOMContentLoaded', function () {
                  + '<text class="chart-y-label" x="' + (padX - 4) + '" y="' + (y + 3) + '" text-anchor="end">' + escapeHtml(yLabel) + '</text>';
         }).join('');
 
-        // Map all 24 hours to SVG points
+        // Map all hours/points to SVG points
         var svgPoints = points.map(function (p, i) {
-            var x = padX + (innerW * i / (points.length - 1));
+            var x = points.length === 1 ? padX + innerW / 2 : padX + (innerW * i / (points.length - 1));
             var v = p.value !== null ? p.value : null;
             var y = v !== null ? padY + innerH - ((v - scaleMin) / scaleRange * innerH) : null;
             return { x: x, y: y, value: v, label: p.label };
@@ -637,7 +642,7 @@ document.addEventListener('DOMContentLoaded', function () {
         pushSegment(segment);
 
         chartLine.setAttribute('d', lineParts.join(' '));
-        chartArea.setAttribute('d', areaParts.join(' '));
+        chartArea.setAttribute('d', areaPath);
 
         // Dots only for non-null
         chartPoints.innerHTML = svgPoints.filter(function (pt) { return pt.y !== null; }).map(function (pt) {
@@ -665,12 +670,16 @@ document.addEventListener('DOMContentLoaded', function () {
         fetch(url, { headers: { Accept: 'application/json' } })
             .then(function (res) { return res.json(); })
             .then(function (payload) {
+                // Ignore response if user switched back to realtime mode
+                if (isRealtimeMode) return;
+
                 if (chartLoading) chartLoading.style.display = 'none';
                 var points = payload && payload.data && Array.isArray(payload.data.points)
                     ? payload.data.points : [];
-                renderDailyChart(points, metric);
+                renderChart(points, metric, false);
             })
             .catch(function (err) {
+                if (isRealtimeMode) return;
                 console.error('Gagal memuat chart harian:', err);
                 if (chartLoading) chartLoading.style.display = 'none';
                 if (chartEmpty)   { chartEmpty.style.display = 'grid'; chartEmpty.textContent = 'Gagal memuat data.'; }
@@ -682,11 +691,21 @@ document.addEventListener('DOMContentLoaded', function () {
     // Set default date to today
     if (dateInput) dateInput.value = todayLocalDate();
 
+    var isRealtimeMode = true;
+
     function loadChart() {
         var date   = dateInput   ? dateInput.value   : todayLocalDate();
         var metric = metricSelect ? metricSelect.value : 'power';
         if (!date) date = todayLocalDate();
-        fetchChartData(date, metric);
+
+        if (date === todayLocalDate()) {
+            isRealtimeMode = true;
+            if (chartLoading) chartLoading.style.display = 'none';
+            refreshDashboard();
+        } else {
+            isRealtimeMode = false;
+            fetchChartData(date, metric);
+        }
     }
 
     if (btnToday) {
@@ -704,7 +723,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (btnLoad)     btnLoad.addEventListener('click', loadChart);
     if (metricSelect) metricSelect.addEventListener('change', loadChart);
 
-    /* ── Realtime: dashboard refresh (no chart) ──────── */
+    /* ── Realtime: dashboard refresh (with realtime chart today) ──────── */
     async function refreshDashboard() {
         try {
             var responses = await Promise.all([
@@ -721,6 +740,21 @@ document.addEventListener('DOMContentLoaded', function () {
                     ? historyPayload.data.data.slice(0, 10)
                     : [];
                 renderHistory(readings);
+
+                // If in realtime mode, update the chart with the last 10 points
+                if (isRealtimeMode) {
+                    var metric = metricSelect ? metricSelect.value : 'power';
+                    var meta = metricMeta[metric] || metricMeta.power;
+                    if (chartTitleLabel) chartTitleLabel.textContent = meta.title.replace('Harian', 'Realtime');
+
+                    var chartPointsArray = readings.slice().reverse().map(function (r) {
+                        return {
+                            label: formatDateTime(r.recorded_at).slice(11, 19),
+                            value: r[metric] !== undefined && r[metric] !== null ? Number(r[metric]) : null
+                        };
+                    });
+                    renderChart(chartPointsArray, metric, true);
+                }
             }
         } catch (error) {
             console.error('Gagal memuat data dashboard realtime:', error);
