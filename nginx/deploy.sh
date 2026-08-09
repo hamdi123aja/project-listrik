@@ -44,12 +44,11 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get install -y phpmyadmin
 # Link phpMyAdmin ke direktori nginx
 sudo ln -sf /usr/share/phpmyadmin /var/www/phpmyadmin
 
-echo "=== [4/7] Clone / Upload Project Laravel ==="
+echo "=== [4/7] Clone Project Laravel dari GitHub ==="
 sudo mkdir -p /var/www/laravel
 sudo chown -R $USER:$USER /var/www/laravel
-# Jika menggunakan git:
-# git clone https://github.com/USERNAME/REPO.git /var/www/laravel
-# Jika upload manual via SCP sudah dilakukan, skip baris git clone
+git clone https://github.com/hamdi123aja/project-listrik.git /var/www/laravel
+sudo chown -R $USER:$USER /var/www/laravel
 
 echo "=== [5/7] Setup Laravel ==="
 cd /var/www/laravel

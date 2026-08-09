@@ -38,8 +38,8 @@
   const char* WIFI_PASSWORD = "87654321";
   // Ganti ke IP laptop/PC yang menjalankan Laravel di jaringan yang sama.
   // Laravel harus dijalankan dengan host 0.0.0.0 agar ESP32 bisa mengaksesnya.
-  const char* API_HOST = "192.168.190.195";
-  const uint16_t API_PORT = 8000;
+  const char* API_HOST = "52.20.146.63";
+  const uint16_t API_PORT = 80;
   const char* API_PATH = "/api/pzem/readings";
   const char* API_TOKEN = "";
 
