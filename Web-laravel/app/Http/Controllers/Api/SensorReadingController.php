@@ -41,9 +41,9 @@ class SensorReadingController extends Controller
         $date   = $validated['date'] ?? Carbon::now($tz)->toDateString();
         $metric = $validated['metric'] ?? 'power';
 
-        // Build the "from" and "to" timestamps in UTC for the query
-        $from = Carbon::parse($date, $tz)->startOfDay()->utc();
-        $to   = Carbon::parse($date, $tz)->endOfDay()->utc();
+        // Build the "from" and "to" timestamps in local timezone for the query
+        $from = Carbon::parse($date, $tz)->startOfDay();
+        $to   = Carbon::parse($date, $tz)->endOfDay();
 
         $driver = DB::getDriverName();
 

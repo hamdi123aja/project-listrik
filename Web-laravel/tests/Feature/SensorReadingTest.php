@@ -72,4 +72,48 @@ class SensorReadingTest extends TestCase
                 && str_contains($request['text'], 'WARNING ARUS TINGGI');
         });
     }
+
+    public function test_daily_chart_endpoint(): void
+    {
+        $tz = config('app.timezone', 'Asia/Jakarta');
+        $now = \Carbon\Carbon::now($tz);
+
+        // Seed some readings for different hours of today
+        \App\Models\SensorReading::create([
+            'device_id' => 'esp32-test',
+            'voltage' => 220.0,
+            'current' => 1.0,
+            'power' => 220.0,
+            'energy' => 0.1,
+            'frequency' => 50.0,
+            'power_factor' => 0.9,
+            'status' => 'normal',
+            'recorded_at' => $now->copy()->hour(10)->minute(0)->second(0),
+        ]);
+
+        \App\Models\SensorReading::create([
+            'device_id' => 'esp32-test',
+            'voltage' => 230.0,
+            'current' => 2.0,
+            'power' => 460.0,
+            'energy' => 0.2,
+            'frequency' => 50.0,
+            'power_factor' => 0.9,
+            'status' => 'normal',
+            'recorded_at' => $now->copy()->hour(12)->minute(0)->second(0),
+        ]);
+
+        $response = $this->getJson('/api/sensor-readings/daily-chart?date=' . $now->toDateString() . '&metric=power');
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('data.date', $now->toDateString())
+            ->assertJsonPath('data.metric', 'power');
+
+        $points = $response->json('data.points');
+        $this->assertCount(24, $points);
+        $this->assertEquals(220.0, $points[10]['value']);
+        $this->assertEquals(460.0, $points[12]['value']);
+        $this->assertNull($points[0]['value']);
+    }
 }
