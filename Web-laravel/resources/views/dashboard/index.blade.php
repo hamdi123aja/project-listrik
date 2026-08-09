@@ -749,18 +749,20 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             if (responses[1].ok) {
                 var historyPayload = await responses[1].json();
-                var readings = historyPayload && historyPayload.data && Array.isArray(historyPayload.data.data)
-                    ? historyPayload.data.data.slice(0, 10)
+                var allReadings = historyPayload && historyPayload.data && Array.isArray(historyPayload.data.data)
+                    ? historyPayload.data.data
                     : [];
-                renderHistory(readings);
+                
+                // History table shows latest 10
+                renderHistory(allReadings.slice(0, 10));
 
-                // If in realtime mode, update the chart with the last 10 points
+                // If in realtime mode, update the chart with the last 50 points for better real-time flow
                 if (isRealtimeMode) {
                     var metric = metricSelect ? metricSelect.value : 'power';
                     var meta = metricMeta[metric] || metricMeta.power;
                     if (chartTitleLabel) chartTitleLabel.textContent = meta.title.replace('Harian', 'Realtime');
 
-                    var chartPointsArray = readings.slice().reverse().map(function (r) {
+                    var chartPointsArray = allReadings.slice(0, 50).reverse().map(function (r) {
                         return {
                             label: formatDateTime(r.recorded_at).slice(11, 19),
                             value: r[metric] !== undefined && r[metric] !== null ? Number(r[metric]) : null
