@@ -456,12 +456,25 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function todayLocalDate() {
-        return new Date().toLocaleDateString('en-CA', { timeZone: appTz });
+        var now = new Date();
+        var utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+        // appTz is Asia/Jakarta which is UTC+7
+        var jakartaTime = new Date(utc + (3600000 * 7));
+        var yyyy = jakartaTime.getFullYear();
+        var mm = String(jakartaTime.getMonth() + 1).padStart(2, '0');
+        var dd = String(jakartaTime.getDate()).padStart(2, '0');
+        return yyyy + '-' + mm + '-' + dd;
     }
     function yesterdayLocalDate() {
-        var d = new Date();
-        d.setDate(d.getDate() - 1);
-        return d.toLocaleDateString('en-CA', { timeZone: appTz });
+        var now = new Date();
+        var utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+        // appTz is Asia/Jakarta which is UTC+7
+        var jakartaTime = new Date(utc + (3600000 * 7));
+        jakartaTime.setDate(jakartaTime.getDate() - 1);
+        var yyyy = jakartaTime.getFullYear();
+        var mm = String(jakartaTime.getMonth() + 1).padStart(2, '0');
+        var dd = String(jakartaTime.getDate()).padStart(2, '0');
+        return yyyy + '-' + mm + '-' + dd;
     }
 
     /* ── Status helpers ──────────────────────────────── */
