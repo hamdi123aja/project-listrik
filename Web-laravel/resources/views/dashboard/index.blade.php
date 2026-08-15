@@ -18,7 +18,7 @@
             'icon' => 'A',
             'value' => $latest ? number_format($latest->current * 1000, 0, ',', '.') : '--',
             'state' => 'Besarnya aliran listrik yang sedang dipakai beban. Jika melewati batas aman, dashboard memberi warning.',
-            'foot' => 'Batas aman '.($warningCurrentThreshold * 1000).' mA',
+            'foot' => 'Batas aman 150',
             'attr' => 'data-current-value',
         ],
         'power' => [
