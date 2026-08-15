@@ -655,7 +655,7 @@ document.addEventListener('DOMContentLoaded', function () {
         pushSegment(segment);
 
         chartLine.setAttribute('d', lineParts.join(' '));
-        chartArea.setAttribute('d', areaPath);
+        chartArea.setAttribute('d', areaParts.join(' '));
 
         // Dots only for non-null
         chartPoints.innerHTML = svgPoints.filter(function (pt) { return pt.y !== null; }).map(function (pt) {
