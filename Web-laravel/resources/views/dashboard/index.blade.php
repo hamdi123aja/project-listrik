@@ -74,9 +74,7 @@
                 <div class="muted" data-updated-at>
                     Update terakhir: {{ $latest?->recorded_at?->timezone(config('app.timezone'))?->format('d M Y H:i:s') ?? '--' }}
                 </div>
-                <div class="muted" style="margin-top:8px" data-device-id>
-                    Terminal Listrik: {{ $latest?->device_id ?? 'Belum tersedia' }}
-                </div>
+               
             </div>
             <div style="display:flex;align-items:center;gap:10px">
                 <div class="pill {{ ($latest?->status ?? 'offline') === 'normal' ? 'normal' : (($latest?->status ?? 'offline') === 'warning' ? 'warning' : 'offline') }}" data-status-pill>
