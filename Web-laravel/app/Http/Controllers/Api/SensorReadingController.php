@@ -41,37 +41,34 @@ class SensorReadingController extends Controller
         $date   = $validated['date'] ?? Carbon::now($tz)->toDateString();
         $metric = $validated['metric'] ?? 'power';
 
-        // Konversi ke UTC agar MySQL TIMESTAMP terbaca benar
-        // MySQL menyimpan TIMESTAMP dalam UTC, jadi $from/$to harus UTC
-        $from = Carbon::parse($date, $tz)->startOfDay()->utc();
-        $to   = Carbon::parse($date, $tz)->endOfDay()->utc();
-
-        // Offset jam timezone (Asia/Jakarta = UTC+7)
-        $tzOffsetHours = 7;
+        // Data disimpan dalam waktu lokal Jakarta (bukan UTC murni)
+        // sehingga perbandingan langsung dengan string waktu Jakarta sudah benar
+        $from = Carbon::parse($date, $tz)->startOfDay();
+        $to   = Carbon::parse($date, $tz)->endOfDay();
 
         $driver = DB::getDriverName();
 
         if ($driver === 'sqlite') {
-            // SQLite: geser +7 jam agar strftime menghasilkan jam lokal Jakarta
             $rows = SensorReading::query()
-                ->selectRaw("CAST(strftime('%H', datetime(recorded_at, '+{$tzOffsetHours} hours')) AS INTEGER) as hour, AVG({$metric}) as avg_value")
+                ->selectRaw("CAST(strftime('%H', recorded_at) AS INTEGER) as hour, AVG({$metric}) as avg_value")
                 ->whereBetween('recorded_at', [$from, $to])
-                ->groupByRaw("strftime('%H', datetime(recorded_at, '+{$tzOffsetHours} hours'))")
-                ->orderByRaw("strftime('%H', datetime(recorded_at, '+{$tzOffsetHours} hours'))")
+                ->groupByRaw("strftime('%H', recorded_at)")
+                ->orderByRaw("strftime('%H', recorded_at)")
                 ->get();
         } else {
-            // MySQL / MariaDB: geser +7 jam agar HOUR() menghasilkan jam lokal Jakarta
+            // MySQL / MariaDB
             $rows = SensorReading::query()
-                ->selectRaw("HOUR(DATE_ADD(recorded_at, INTERVAL {$tzOffsetHours} HOUR)) as hour, AVG({$metric}) as avg_value")
+                ->selectRaw("HOUR(recorded_at) as hour, AVG({$metric}) as avg_value")
                 ->whereBetween('recorded_at', [$from, $to])
-                ->groupByRaw("HOUR(DATE_ADD(recorded_at, INTERVAL {$tzOffsetHours} HOUR))")
-                ->orderByRaw("HOUR(DATE_ADD(recorded_at, INTERVAL {$tzOffsetHours} HOUR))")
+                ->groupByRaw('HOUR(recorded_at)')
+                ->orderByRaw('HOUR(recorded_at)')
                 ->get()
                 ->map(function ($row) {
                     $row->hour = (int) $row->hour;
                     return $row;
                 });
         }
+
 
         // Build a full 24-hour array — hours without data get null
         $hourlyMap = $rows->keyBy('hour');
