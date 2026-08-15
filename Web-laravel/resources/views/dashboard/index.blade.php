@@ -7,7 +7,7 @@
             'label' => 'Tegangan',
             'unit' => 'V',
             'icon' => 'V',
-            'value' => $latest ? number_format($latest->voltage, 2) : '--',
+            'value' => $latest ? number_format($latest->voltage, 0, ',', '.') : '--',
             'state' => 'Voltase suplai listrik. Rumah tangga umumnya berada di sekitar 220 V; turun atau naik jauh bisa mengganggu perangkat.',
             'foot' => 'Stabilitas sumber',
             'attr' => 'data-voltage-value',
@@ -16,7 +16,7 @@
             'label' => 'Arus',
             'unit' => 'A',
             'icon' => 'A',
-            'value' => $latest ? number_format($latest->current, 3) : '--',
+            'value' => $latest ? number_format($latest->current, 0, ',', '.') : '--',
             'state' => 'Besarnya aliran listrik yang sedang dipakai beban. Jika melewati batas aman, dashboard memberi warning.',
             'foot' => 'Batas aman '.$warningCurrentThreshold.' A',
             'attr' => 'data-current-value',
@@ -25,7 +25,7 @@
             'label' => 'Daya',
             'unit' => 'W',
             'icon' => 'W',
-            'value' => $latest ? number_format($latest->power, 2) : '--',
+            'value' => $latest ? number_format($latest->power, 0, ',', '.') : '--',
             'state' => 'Konsumsi listrik sesaat. Nilai ini naik saat perangkat yang menyala semakin berat.',
             'foot' => 'Beban saat ini',
             'attr' => 'data-power-value',
@@ -34,7 +34,7 @@
             'label' => 'Energi',
             'unit' => 'kWh',
             'icon' => 'E',
-            'value' => $latest ? number_format($latest->energy, 3) : '--',
+            'value' => $latest ? number_format($latest->energy, 0, ',', '.') : '--',
             'state' => 'Akumulasi pemakaian listrik. Nilai kWh ini dipakai untuk menghitung estimasi biaya.',
             'foot' => 'Akumulasi meter',
             'attr' => 'data-energy-value',
@@ -43,7 +43,7 @@
             'label' => 'Frekuensi',
             'unit' => 'Hz',
             'icon' => 'Hz',
-            'value' => $latest ? number_format($latest->frequency ?? 0, 1) : '--',
+            'value' => $latest ? number_format($latest->frequency ?? 0, 0, ',', '.') : '--',
             'state' => 'Jumlah siklus listrik AC per detik. Di Indonesia nilainya idealnya mendekati 50 Hz.',
             'foot' => 'Kualitas jaringan',
             'attr' => 'data-frequency-value',
@@ -52,7 +52,7 @@
             'label' => 'Power Factor',
             'unit' => '',
             'icon' => 'PF',
-            'value' => $latest ? number_format($latest->power_factor ?? 0, 2) : '--',
+            'value' => $latest ? number_format($latest->power_factor ?? 0, 0, ',', '.') : '--',
             'state' => 'Efisiensi pemakaian daya. Semakin mendekati 1, semakin baik daya listrik dimanfaatkan.',
             'foot' => 'Efisiensi beban',
             'attr' => 'data-power-factor-value',
@@ -410,18 +410,16 @@ document.addEventListener('DOMContentLoaded', function () {
     var metricSelect  = document.getElementById('chartMetricSelect');
 
     /* ── Formatters ──────────────────────────────────── */
-    var number1  = new Intl.NumberFormat('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-    var number2  = new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    var number3  = new Intl.NumberFormat('id-ID', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+    var number0  = new Intl.NumberFormat('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
     var currency = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 });
 
     var metricMeta = {
-        power:        { label: 'Daya',         unit: 'W',   title: 'Chart Daya Harian',         fmt: number2,  color: 'rgba(0,212,255,1)', glow: 'rgba(0,212,255,0.35)', area: 'rgba(0,212,255,0.10)' },
-        current:      { label: 'Arus',         unit: 'A',   title: 'Chart Arus Harian',         fmt: number3,  color: 'rgba(240,192,0,1)', glow: 'rgba(240,192,0,0.35)', area: 'rgba(240,192,0,0.10)' },
-        voltage:      { label: 'Tegangan',     unit: 'V',   title: 'Chart Tegangan Harian',     fmt: number2,  color: 'rgba(0,230,118,1)', glow: 'rgba(0,230,118,0.35)', area: 'rgba(0,230,118,0.10)' },
-        energy:       { label: 'Energi',       unit: 'kWh', title: 'Chart Energi Harian',       fmt: number3,  color: 'rgba(255,112,0,1)', glow: 'rgba(255,112,0,0.30)', area: 'rgba(255,112,0,0.08)' },
-        frequency:    { label: 'Frekuensi',    unit: 'Hz',  title: 'Chart Frekuensi Harian',    fmt: number1,  color: 'rgba(179,136,255,1)', glow: 'rgba(179,136,255,0.35)', area: 'rgba(179,136,255,0.10)' },
-        power_factor: { label: 'Power Factor', unit: '',    title: 'Chart Power Factor Harian', fmt: number2,  color: 'rgba(255,77,77,1)',  glow: 'rgba(255,77,77,0.30)', area: 'rgba(255,77,77,0.08)' },
+        power:        { label: 'Daya',         unit: 'W',   title: 'Chart Daya Realtime',       fmt: number0,  color: 'rgba(0,212,255,1)', glow: 'rgba(0,212,255,0.35)', area: 'rgba(0,212,255,0.10)' },
+        current:      { label: 'Arus',         unit: 'A',   title: 'Chart Arus Realtime',       fmt: number0,  color: 'rgba(240,192,0,1)', glow: 'rgba(240,192,0,0.35)', area: 'rgba(240,192,0,0.10)' },
+        voltage:      { label: 'Tegangan',     unit: 'V',   title: 'Chart Tegangan Realtime',   fmt: number0,  color: 'rgba(0,230,118,1)', glow: 'rgba(0,230,118,0.35)', area: 'rgba(0,230,118,0.10)' },
+        energy:       { label: 'Energi',       unit: 'kWh', title: 'Chart Energi Realtime',     fmt: number0,  color: 'rgba(255,112,0,1)', glow: 'rgba(255,112,0,0.30)', area: 'rgba(255,112,0,0.08)' },
+        frequency:    { label: 'Frekuensi',    unit: 'Hz',  title: 'Chart Frekuensi Realtime',  fmt: number0,  color: 'rgba(179,136,255,1)', glow: 'rgba(179,136,255,0.35)', area: 'rgba(179,136,255,0.10)' },
+        power_factor: { label: 'Power Factor', unit: '',    title: 'Chart Power Factor Realtime', fmt: number0,  color: 'rgba(255,77,77,1)',  glow: 'rgba(255,77,77,0.30)', area: 'rgba(255,77,77,0.08)' },
     };
 
     /* ── Helper ──────────────────────────────────────── */
@@ -503,15 +501,15 @@ document.addEventListener('DOMContentLoaded', function () {
         var powerFactor = Number(reading.power_factor || 0);
         var cost        = energy * tariffPerKwh;
 
-        if (voltageValue)     voltageValue.textContent     = number2.format(voltage);
-        if (currentValue)     currentValue.textContent     = number3.format(current);
-        if (powerValue)       powerValue.textContent       = number2.format(power);
-        if (energyValue)      energyValue.textContent      = number3.format(energy);
-        if (frequencyValue)   frequencyValue.textContent   = number1.format(frequency);
-        if (powerFactorValue) powerFactorValue.textContent = number2.format(powerFactor);
+        if (voltageValue)     voltageValue.textContent     = number0.format(voltage);
+        if (currentValue)     currentValue.textContent     = number0.format(current);
+        if (powerValue)       powerValue.textContent       = number0.format(power);
+        if (energyValue)      energyValue.textContent      = number0.format(energy);
+        if (frequencyValue)   frequencyValue.textContent   = number0.format(frequency);
+        if (powerFactorValue) powerFactorValue.textContent = number0.format(powerFactor);
         if (estimatedCost)    estimatedCost.textContent    = 'Rp ' + currency.format(cost);
-        if (powerSummary)     powerSummary.textContent     = number2.format(power);
-        if (energySummary)    energySummary.textContent    = number3.format(energy);
+        if (powerSummary)     powerSummary.textContent     = number0.format(power);
+        if (energySummary)    energySummary.textContent    = number0.format(energy);
         if (updatedAtEl)      updatedAtEl.textContent      = 'Update terakhir: ' + formatDateTime(reading.recorded_at);
         if (deviceIdEl)       deviceIdEl.textContent       = 'Terminal Listrik: ' + (reading.device_id || 'Belum tersedia');
         setStatus(reading.status);
@@ -530,12 +528,12 @@ document.addEventListener('DOMContentLoaded', function () {
             return [
                 '<tr>',
                 '<td>' + escapeHtml(formatDateTime(r.recorded_at)) + '</td>',
-                '<td>' + escapeHtml(number2.format(Number(r.voltage      || 0))) + ' V</td>',
-                '<td>' + escapeHtml(number3.format(Number(r.current      || 0))) + ' A</td>',
-                '<td>' + escapeHtml(number2.format(Number(r.power        || 0))) + ' W</td>',
-                '<td>' + escapeHtml(number3.format(Number(r.energy       || 0))) + ' kWh</td>',
-                '<td>' + escapeHtml(number1.format(Number(r.frequency    || 0))) + ' Hz</td>',
-                '<td>' + escapeHtml(number2.format(Number(r.power_factor || 0))) + '</td>',
+                '<td>' + escapeHtml(number0.format(Number(r.voltage      || 0))) + ' V</td>',
+                '<td>' + escapeHtml(number0.format(Number(r.current      || 0))) + ' A</td>',
+                '<td>' + escapeHtml(number0.format(Number(r.power        || 0))) + ' W</td>',
+                '<td>' + escapeHtml(number0.format(Number(r.energy       || 0))) + ' kWh</td>',
+                '<td>' + escapeHtml(number0.format(Number(r.frequency    || 0))) + ' Hz</td>',
+                '<td>' + escapeHtml(number0.format(Number(r.power_factor || 0))) + '</td>',
                 '<td><span class="pill ' + escapeHtml(sc) + '">' + escapeHtml(sc.toUpperCase()) + '</span></td>',
                 '</tr>'
             ].join('');
