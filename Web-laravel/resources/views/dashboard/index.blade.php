@@ -14,11 +14,11 @@
         ],
         'current' => [
             'label' => 'Arus',
-            'unit' => 'A',
+            'unit' => 'mA',
             'icon' => 'A',
-            'value' => $latest ? number_format($latest->current, 0, ',', '.') : '--',
+            'value' => $latest ? number_format($latest->current * 1000, 0, ',', '.') : '--',
             'state' => 'Besarnya aliran listrik yang sedang dipakai beban. Jika melewati batas aman, dashboard memberi warning.',
-            'foot' => 'Batas aman '.$warningCurrentThreshold.' A',
+            'foot' => 'Batas aman '.($warningCurrentThreshold * 1000).' mA',
             'attr' => 'data-current-value',
         ],
         'power' => [
@@ -32,10 +32,10 @@
         ],
         'energy' => [
             'label' => 'Energi',
-            'unit' => 'kWh',
+            'unit' => 'Wh',
             'icon' => 'E',
-            'value' => $latest ? number_format($latest->energy, 0, ',', '.') : '--',
-            'state' => 'Akumulasi pemakaian listrik. Nilai kWh ini dipakai untuk menghitung estimasi biaya.',
+            'value' => $latest ? number_format($latest->energy * 1000, 0, ',', '.') : '--',
+            'state' => 'Akumulasi pemakaian listrik. Nilai Wh ini dipakai untuk menghitung estimasi biaya.',
             'foot' => 'Akumulasi meter',
             'attr' => 'data-energy-value',
         ],
@@ -50,10 +50,10 @@
         ],
         'power_factor' => [
             'label' => 'Power Factor',
-            'unit' => '',
+            'unit' => '%',
             'icon' => 'PF',
-            'value' => $latest ? number_format($latest->power_factor ?? 0, 0, ',', '.') : '--',
-            'state' => 'Efisiensi pemakaian daya. Semakin mendekati 1, semakin baik daya listrik dimanfaatkan.',
+            'value' => $latest ? number_format(($latest->power_factor ?? 0) * 100, 0, ',', '.') : '--',
+            'state' => 'Efisiensi pemakaian daya. Semakin mendekati 100%, semakin baik daya listrik dimanfaatkan.',
             'foot' => 'Efisiensi beban',
             'attr' => 'data-power-factor-value',
         ],
@@ -208,12 +208,12 @@
                     @forelse($history as $item)
                         <tr>
                             <td>{{ $item->recorded_at?->timezone(config('app.timezone'))?->format('d-m-Y H:i:s') }}</td>
-                            <td>{{ number_format($item->voltage, 2) }} V</td>
-                            <td>{{ number_format($item->current, 3) }} A</td>
-                            <td>{{ number_format($item->power, 2) }} W</td>
-                            <td>{{ number_format($item->energy, 3) }} kWh</td>
-                            <td>{{ number_format($item->frequency ?? 0, 1) }} Hz</td>
-                            <td>{{ number_format($item->power_factor ?? 0, 2) }}</td>
+                            <td>{{ number_format($item->voltage, 0, ',', '.') }} V</td>
+                            <td>{{ number_format($item->current * 1000, 0, ',', '.') }} mA</td>
+                            <td>{{ number_format($item->power, 0, ',', '.') }} W</td>
+                            <td>{{ number_format($item->energy * 1000, 0, ',', '.') }} Wh</td>
+                            <td>{{ number_format($item->frequency ?? 0, 0, ',', '.') }} Hz</td>
+                            <td>{{ number_format(($item->power_factor ?? 0) * 100, 0, ',', '.') }}%</td>
                             <td><span class="pill {{ $item->status }}">{{ strtoupper($item->status) }}</span></td>
                         </tr>
                     @empty
@@ -415,11 +415,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var metricMeta = {
         power:        { label: 'Daya',         unit: 'W',   title: 'Chart Daya Realtime',       fmt: number0,  color: 'rgba(0,212,255,1)', glow: 'rgba(0,212,255,0.35)', area: 'rgba(0,212,255,0.10)' },
-        current:      { label: 'Arus',         unit: 'A',   title: 'Chart Arus Realtime',       fmt: number0,  color: 'rgba(240,192,0,1)', glow: 'rgba(240,192,0,0.35)', area: 'rgba(240,192,0,0.10)' },
+        current:      { label: 'Arus',         unit: 'mA',  title: 'Chart Arus Realtime',       fmt: number0,  color: 'rgba(240,192,0,1)', glow: 'rgba(240,192,0,0.35)', area: 'rgba(240,192,0,0.10)' },
         voltage:      { label: 'Tegangan',     unit: 'V',   title: 'Chart Tegangan Realtime',   fmt: number0,  color: 'rgba(0,230,118,1)', glow: 'rgba(0,230,118,0.35)', area: 'rgba(0,230,118,0.10)' },
-        energy:       { label: 'Energi',       unit: 'kWh', title: 'Chart Energi Realtime',     fmt: number0,  color: 'rgba(255,112,0,1)', glow: 'rgba(255,112,0,0.30)', area: 'rgba(255,112,0,0.08)' },
+        energy:       { label: 'Energi',       unit: 'Wh',  title: 'Chart Energi Realtime',     fmt: number0,  color: 'rgba(255,112,0,1)', glow: 'rgba(255,112,0,0.30)', area: 'rgba(255,112,0,0.08)' },
         frequency:    { label: 'Frekuensi',    unit: 'Hz',  title: 'Chart Frekuensi Realtime',  fmt: number0,  color: 'rgba(179,136,255,1)', glow: 'rgba(179,136,255,0.35)', area: 'rgba(179,136,255,0.10)' },
-        power_factor: { label: 'Power Factor', unit: '',    title: 'Chart Power Factor Realtime', fmt: number0,  color: 'rgba(255,77,77,1)',  glow: 'rgba(255,77,77,0.30)', area: 'rgba(255,77,77,0.08)' },
+        power_factor: { label: 'Power Factor', unit: '%',   title: 'Chart Power Factor Realtime', fmt: number0,  color: 'rgba(255,77,77,1)',  glow: 'rgba(255,77,77,0.30)', area: 'rgba(255,77,77,0.08)' },
     };
 
     /* ── Helper ──────────────────────────────────────── */
@@ -502,14 +502,14 @@ document.addEventListener('DOMContentLoaded', function () {
         var cost        = energy * tariffPerKwh;
 
         if (voltageValue)     voltageValue.textContent     = number0.format(voltage);
-        if (currentValue)     currentValue.textContent     = number0.format(current);
+        if (currentValue)     currentValue.textContent     = number0.format(current * 1000);
         if (powerValue)       powerValue.textContent       = number0.format(power);
-        if (energyValue)      energyValue.textContent      = number0.format(energy);
+        if (energyValue)      energyValue.textContent      = number0.format(energy * 1000);
         if (frequencyValue)   frequencyValue.textContent   = number0.format(frequency);
-        if (powerFactorValue) powerFactorValue.textContent = number0.format(powerFactor);
+        if (powerFactorValue) powerFactorValue.textContent = number0.format(powerFactor * 100);
         if (estimatedCost)    estimatedCost.textContent    = 'Rp ' + currency.format(cost);
         if (powerSummary)     powerSummary.textContent     = number0.format(power);
-        if (energySummary)    energySummary.textContent    = number0.format(energy);
+        if (energySummary)    energySummary.textContent    = number0.format(energy * 1000); // Tampilkan Wh
         if (updatedAtEl)      updatedAtEl.textContent      = 'Update terakhir: ' + formatDateTime(reading.recorded_at);
         if (deviceIdEl)       deviceIdEl.textContent       = 'Terminal Listrik: ' + (reading.device_id || 'Belum tersedia');
         setStatus(reading.status);
@@ -529,11 +529,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 '<tr>',
                 '<td>' + escapeHtml(formatDateTime(r.recorded_at)) + '</td>',
                 '<td>' + escapeHtml(number0.format(Number(r.voltage      || 0))) + ' V</td>',
-                '<td>' + escapeHtml(number0.format(Number(r.current      || 0))) + ' A</td>',
+                '<td>' + escapeHtml(number0.format(Number(r.current      || 0) * 1000)) + ' mA</td>',
                 '<td>' + escapeHtml(number0.format(Number(r.power        || 0))) + ' W</td>',
-                '<td>' + escapeHtml(number0.format(Number(r.energy       || 0))) + ' kWh</td>',
+                '<td>' + escapeHtml(number0.format(Number(r.energy       || 0) * 1000)) + ' Wh</td>',
                 '<td>' + escapeHtml(number0.format(Number(r.frequency    || 0))) + ' Hz</td>',
-                '<td>' + escapeHtml(number0.format(Number(r.power_factor || 0))) + '</td>',
+                '<td>' + escapeHtml(number0.format(Number(r.power_factor || 0) * 100)) + '%</td>',
                 '<td><span class="pill ' + escapeHtml(sc) + '">' + escapeHtml(sc.toUpperCase()) + '</span></td>',
                 '</tr>'
             ].join('');
@@ -675,9 +675,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (chartTitleLabel) chartTitleLabel.textContent = meta.title.replace('Harian', 'Realtime');
 
                 var chartPointsArray = allReadings.slice(0, 50).reverse().map(function (r) {
+                    var val = r[metric] !== undefined && r[metric] !== null ? Number(r[metric]) : null;
+                    if (val !== null) {
+                        if (metric === 'current' || metric === 'energy') {
+                            val = val * 1000;
+                        } else if (metric === 'power_factor') {
+                            val = val * 100;
+                        }
+                    }
                     return {
                         label: formatDateTime(r.recorded_at).slice(11, 19),
-                        value: r[metric] !== undefined && r[metric] !== null ? Number(r[metric]) : null
+                        value: val
                     };
                 });
                 renderChart(chartPointsArray, metric, true);
