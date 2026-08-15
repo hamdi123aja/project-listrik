@@ -15,8 +15,8 @@ class SensorReadingTest extends TestCase
         $response = $this->postJson('/api/sensor-readings', [
             'device_id' => 'esp32-test',
             'voltage' => 220.4,
-            'current' => 0.532,
-            'power' => 117.2,
+            'current' => 0.143,
+            'power' => 29.5,
             'energy' => 1.254,
             'frequency' => 50.0,
             'power_factor' => 0.98,
@@ -36,7 +36,7 @@ class SensorReadingTest extends TestCase
     public function test_high_current_triggers_warning_status_and_telegram_notification(): void
     {
         config([
-            'services.monitoring.warning_current_threshold' => 15.0,
+            'services.monitoring.warning_current_threshold' => 0.150,
             'services.telegram.bot_token' => 'test-token',
             'services.telegram.chat_id' => '123456',
             'services.telegram.alert_cooldown_seconds' => 0,
@@ -49,8 +49,8 @@ class SensorReadingTest extends TestCase
         $response = $this->postJson('/api/sensor-readings', [
             'device_id' => 'esp32-warning',
             'voltage' => 220.0,
-            'current' => 15.01,
-            'power' => 3302.2,
+            'current' => 0.150,
+            'power' => 31.5,
             'energy' => 1.500,
             'frequency' => 50.0,
             'power_factor' => 0.91,
@@ -71,6 +71,38 @@ class SensorReadingTest extends TestCase
                 && $request['chat_id'] === '123456'
                 && str_contains($request['text'], 'WARNING ARUS TINGGI');
         });
+    }
+
+    public function test_current_below_150_ma_does_not_trigger_warning_or_telegram(): void
+    {
+        config([
+            'services.monitoring.warning_current_threshold' => 0.150,
+            'services.telegram.bot_token' => 'test-token',
+            'services.telegram.chat_id' => '123456',
+            'services.telegram.alert_cooldown_seconds' => 0,
+        ]);
+
+        Http::fake([
+            'api.telegram.org/*' => Http::response(['ok' => true], 200),
+        ]);
+
+        $response = $this->postJson('/api/sensor-readings', [
+            'device_id' => 'esp32-normal',
+            'voltage' => 211.0,
+            'current' => 0.143,
+            'power' => 29.5,
+            'energy' => 1.500,
+            'frequency' => 50.0,
+            'power_factor' => 0.98,
+            'status' => 'normal',
+        ]);
+
+        $response
+            ->assertCreated()
+            ->assertJsonPath('data.status', 'normal')
+            ->assertJsonPath('telegram_sent', false);
+
+        Http::assertNothingSent();
     }
 
     public function test_daily_chart_endpoint(): void

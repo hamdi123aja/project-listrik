@@ -10,7 +10,7 @@ class DashboardController extends Controller
 {
     public function index(): View
     {
-        $warningCurrentThreshold = (float) config('services.monitoring.warning_current_threshold', 15.0);
+        $warningCurrentThreshold = (float) config('services.monitoring.warning_current_threshold', 0.150);
 
         if (!Schema::hasTable('sensor_readings')) {
             return view('dashboard.index', [

@@ -113,13 +113,11 @@ class SensorReadingController extends Controller
             ], 401);
         }
 
-        $warningCurrentThreshold = (float) config('services.monitoring.warning_current_threshold', 15.0);
-        $warningPowerThreshold = (float) config('services.monitoring.warning_power_threshold', 15.0);
+        $warningCurrentThreshold = (float) config('services.monitoring.warning_current_threshold', 0.150);
         
         $current = (float) $validated['current'];
-        $power = (float) $validated['power'];
 
-        $isWarning = $current > $warningCurrentThreshold || $power > $warningPowerThreshold;
+        $isWarning = $current >= $warningCurrentThreshold;
         $status = $isWarning
             ? 'warning'
             : ($validated['status'] ?? 'normal');
@@ -133,13 +131,7 @@ class SensorReadingController extends Controller
 
         $telegramSent = false;
 
-        if ($power > $warningPowerThreshold) {
-            if ($telegramNotifier->sendPowerWarning($reading, $warningPowerThreshold)) {
-                $telegramSent = true;
-            }
-        }
-
-        if ($current > $warningCurrentThreshold) {
+        if ($current >= $warningCurrentThreshold) {
             if ($telegramNotifier->sendCurrentWarning($reading, $warningCurrentThreshold)) {
                 $telegramSent = true;
             }

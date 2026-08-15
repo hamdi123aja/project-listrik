@@ -18,7 +18,7 @@
             'icon' => 'A',
             'value' => $latest ? number_format($latest->current * 1000, 0, ',', '.') : '--',
             'state' => 'Besarnya aliran listrik yang sedang dipakai beban. Jika melewati batas aman, dashboard memberi warning.',
-            'foot' => 'Batas aman 150',
+            'foot' => 'Batas aman 150 mA',
             'attr' => 'data-current-value',
         ],
         'power' => [
@@ -83,7 +83,7 @@
             </div>
         </div>
 
-        <div class="alert warning" data-current-warning @if(!($latest && (float) $latest->current > $warningCurrentThreshold)) style="display:none" @endif>
+        <div class="alert warning" data-current-warning @if(!($latest && (float) $latest->current >= $warningCurrentThreshold)) style="display:none" @endif>
             <strong>Peringatan arus tinggi:</strong>
             Arus melewati batas {{ number_format($warningCurrentThreshold, 3) }} A. Kurangi beban atau periksa terminal listrik.
         </div>
@@ -470,7 +470,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function updateCurrentWarning(current) {
         if (!currentWarning) return;
-        currentWarning.style.display = typeof current === 'number' && current > warningCurrentThreshold ? 'block' : 'none';
+        currentWarning.style.display = typeof current === 'number' && current >= warningCurrentThreshold ? 'block' : 'none';
     }
 
     /* ── Realtime: setLatest ─────────────────────────── */

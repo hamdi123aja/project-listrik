@@ -36,7 +36,7 @@ class HistoryController extends Controller
             $query->where('device_id', $validated['device_id']);
         }
 
-        $currentWarningThreshold = 8.0;
+        $currentWarningThreshold = (float) config('services.monitoring.warning_current_threshold', 0.150);
         $readings = $query->paginate(15)->withQueryString();
         $statsBase = (clone $query);
         $peakPower = (float) ($statsBase->max('power') ?? 0);
