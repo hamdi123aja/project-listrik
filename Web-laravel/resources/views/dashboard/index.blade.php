@@ -157,7 +157,7 @@
 
                     <!-- Filter bar -->
                     <div class="chart-filter-bar">
-                        <div class="chart-filter-group">
+                        <div class="chart-filter-group" style="max-width: 200px;">
                             <label class="chart-filter-label" for="chartMetricSelect">Metrik</label>
                             <select id="chartMetricSelect" class="chart-filter-select">
                                 <option value="power" selected>Daya (W)</option>
@@ -167,16 +167,6 @@
                                 <option value="frequency">Frekuensi (Hz)</option>
                                 <option value="power_factor">Power Factor</option>
                             </select>
-                        </div>
-                        <div class="chart-filter-group">
-                            <label class="chart-filter-label" for="chartDateInput">Tanggal</label>
-                            <input type="date" id="chartDateInput" class="chart-filter-input"
-                                   max="{{ now(config('app.timezone'))->toDateString() }}">
-                        </div>
-                        <div class="chart-filter-actions">
-                            <button type="button" id="chartBtnToday" class="chart-btn chart-btn-outline">Hari Ini</button>
-                            <button type="button" id="chartBtnYesterday" class="chart-btn chart-btn-outline">Kemarin</button>
-                            <button type="button" id="chartBtnLoad" class="chart-btn chart-btn-primary">Tampilkan</button>
                         </div>
                     </div>
 
@@ -418,10 +408,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     /* ── Filter controls ─────────────────────────────── */
     var metricSelect  = document.getElementById('chartMetricSelect');
-    var dateInput     = document.getElementById('chartDateInput');
-    var btnToday      = document.getElementById('chartBtnToday');
-    var btnYesterday  = document.getElementById('chartBtnYesterday');
-    var btnLoad       = document.getElementById('chartBtnLoad');
 
     /* ── Formatters ──────────────────────────────────── */
     var number1  = new Intl.NumberFormat('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
@@ -666,76 +652,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     /* ── Chart: fetch from API ───────────────────────── */
-    function fetchChartData(date, metric) {
-        if (!chart) return;
-        var meta = metricMeta[metric] || metricMeta.power;
-
-        // Update title
-        if (chartTitleLabel) chartTitleLabel.textContent = meta.title + ' (' + date + ')';
-
-        // Show loading state
-        if (chartLoading)  chartLoading.style.display  = 'flex';
-        if (chartWrapper)  chartWrapper.style.display  = 'none';
-        if (chartEmpty)    chartEmpty.style.display    = 'none';
-        if (chartAvgBadge) chartAvgBadge.textContent   = '…';
-
-        var url = dailyChartUrl + '?date=' + encodeURIComponent(date) + '&metric=' + encodeURIComponent(metric);
-        fetch(url, { headers: { Accept: 'application/json' } })
-            .then(function (res) { return res.json(); })
-            .then(function (payload) {
-                // Ignore response if user switched back to realtime mode
-                if (isRealtimeMode) return;
-
-                if (chartLoading) chartLoading.style.display = 'none';
-                var points = payload && payload.data && Array.isArray(payload.data.points)
-                    ? payload.data.points : [];
-                renderChart(points, metric, false);
-            })
-            .catch(function (err) {
-                if (isRealtimeMode) return;
-                console.error('Gagal memuat chart harian:', err);
-                if (chartLoading) chartLoading.style.display = 'none';
-                if (chartEmpty)   { chartEmpty.style.display = 'grid'; chartEmpty.textContent = 'Gagal memuat data.'; }
-                if (chartWrapper) chartWrapper.style.display = 'none';
-            });
-    }
-
-    /* ── Filter controls ─────────────────────────────── */
-    // Set default date to today
-    if (dateInput) dateInput.value = todayLocalDate();
-
-    var isRealtimeMode = true;
-
-    function loadChart() {
-        var date   = dateInput   ? dateInput.value   : todayLocalDate();
-        var metric = metricSelect ? metricSelect.value : 'power';
-        if (!date) date = todayLocalDate();
-
-        if (date === todayLocalDate()) {
-            isRealtimeMode = true;
-            if (chartLoading) chartLoading.style.display = 'none';
-            refreshDashboard();
-        } else {
-            isRealtimeMode = false;
-            fetchChartData(date, metric);
-        }
-    }
-
-    if (btnToday) {
-        btnToday.addEventListener('click', function () {
-            if (dateInput) dateInput.value = todayLocalDate();
-            loadChart();
-        });
-    }
-    if (btnYesterday) {
-        btnYesterday.addEventListener('click', function () {
-            if (dateInput) dateInput.value = yesterdayLocalDate();
-            loadChart();
-        });
-    }
-    if (btnLoad)     btnLoad.addEventListener('click', loadChart);
-    if (metricSelect) metricSelect.addEventListener('change', loadChart);
-
     /* ── Realtime: dashboard refresh (with realtime chart today) ──────── */
     async function refreshDashboard() {
         try {
@@ -756,30 +672,30 @@ document.addEventListener('DOMContentLoaded', function () {
                 // History table shows latest 10
                 renderHistory(allReadings.slice(0, 10));
 
-                // If in realtime mode, update the chart with the last 50 points for better real-time flow
-                if (isRealtimeMode) {
-                    var metric = metricSelect ? metricSelect.value : 'power';
-                    var meta = metricMeta[metric] || metricMeta.power;
-                    if (chartTitleLabel) chartTitleLabel.textContent = meta.title.replace('Harian', 'Realtime');
+                var metric = metricSelect ? metricSelect.value : 'power';
+                var meta = metricMeta[metric] || metricMeta.power;
+                if (chartTitleLabel) chartTitleLabel.textContent = meta.title.replace('Harian', 'Realtime');
 
-                    var chartPointsArray = allReadings.slice(0, 50).reverse().map(function (r) {
-                        return {
-                            label: formatDateTime(r.recorded_at).slice(11, 19),
-                            value: r[metric] !== undefined && r[metric] !== null ? Number(r[metric]) : null
-                        };
-                    });
-                    renderChart(chartPointsArray, metric, true);
-                }
+                var chartPointsArray = allReadings.slice(0, 50).reverse().map(function (r) {
+                    return {
+                        label: formatDateTime(r.recorded_at).slice(11, 19),
+                        value: r[metric] !== undefined && r[metric] !== null ? Number(r[metric]) : null
+                    };
+                });
+                renderChart(chartPointsArray, metric, true);
             }
         } catch (error) {
             console.error('Gagal memuat data dashboard realtime:', error);
         }
     }
 
+    if (metricSelect) {
+        metricSelect.addEventListener('change', refreshDashboard);
+    }
+
     /* ── Init ────────────────────────────────────────── */
     refreshDashboard();
     window.setInterval(refreshDashboard, refreshIntervalMs);
-    loadChart();   // Initial chart load (today, power)
 });
 </script>
 @endsection
