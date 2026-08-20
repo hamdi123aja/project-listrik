@@ -141,8 +141,8 @@
                         <div class="summary-row">
                             <span class="label">Energi Terbaru</span>
                             <span class="number">
-                                <span data-energy-summary>{{ $latest ? number_format($displayedEnergy ?? 0, 3) : '--' }}</span>
-                                <small style="font-size:12px;color:var(--muted-2)">kWh</small>
+                                <span data-energy-summary>{{ $latest ? number_format(($displayedEnergy ?? 0) * 1000, 0, ',', '.') : '--' }}</span>
+                                <small style="font-size:12px;color:var(--muted-2)">Wh</small>
                             </span>
                         </div>
                     </div>
@@ -161,7 +161,7 @@
                                 <option value="power" selected>Daya (W)</option>
                                 <option value="current">Arus (A)</option>
                                 <option value="voltage">Tegangan (V)</option>
-                                <option value="energy">Energi (kWh)</option>
+                                <option value="energy">Energi (Wh)</option>
                                 <option value="frequency">Frekuensi (Hz)</option>
                                 <option value="power_factor">Power Factor</option>
                             </select>
