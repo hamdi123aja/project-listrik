@@ -36,7 +36,7 @@ return [
     ],
 
     'monitoring' => [
-        'warning_current_threshold' => (float) env('WARNING_CURRENT_THRESHOLD', 0.200),
+        'warning_current_threshold' => (float) env('WARNING_CURRENT_THRESHOLD', 0.150),
         'warning_power_threshold' => (float) env('WARNING_POWER_THRESHOLD', 15.0),
     ],
 
