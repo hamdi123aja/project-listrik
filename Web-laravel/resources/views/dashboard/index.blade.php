@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Dashboarddd - Monitoring Konsumsi Listrik')
+@section('title', 'Dashboard - Monitoring Konsumsi Listrik')
 @section('body')
 @php
     $metricInfo = [
