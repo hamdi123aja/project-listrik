@@ -186,7 +186,7 @@
 
         <section class="card">
             <div class="card-header" style="margin-bottom:0">
-                <h3>Riwayat Terakhir</h3>
+                <h3>Riwayat Terakhirrrr</h3>
             </div>
             <div style="overflow-x:auto;margin-top:16px">
                 <table class="table">
